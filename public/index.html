@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>make wih</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+    input { padding: 2px; width: 70%; }
+    button { padding: 2px 2px; cursor: pointer; }
+    .wish { padding: 2px; margin: 2px 0; border: 2px solid #ddd; border-radius: 2px; display: flex; justify-content: space-between; align-items: center; }
+    .wish.fulfilled { opacity: 0.6; text-decoration: line-through; }
+    .buttons { display: flex; gap: 2px; }
+  </style>
+</head>
+<body>
+  <h1>MAKE A WIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIH</h1>
+  
+  <div>
+    <input type="text" id="wishInput" placeholder="make wih...">
+    <button onclick="addWish()">add wih</button>
+  </div>
+
+  <div id="wishes"></div>
+
+  <script>
+    async function loadWishes() {
+      const res = await fetch('/api/wishes')
+      const wishes = await res.json()
+      const container = document.getElementById('wishes')
+      container.innerHTML = wishes.map(w => `
+        <div class="wish ${w.fulfilled ? 'fulfilled' : ''}">
+          <span>${w.item}</span>
+          <div class="buttons">
+            ${!w.fulfilled ? `<button onclick="fulfillWish(${w.id})">✓</button>` : ''}
+            <button onclick="deleteWish(${w.id})">byebye</button>
+          </div>
+        </div>
+      `).join('')
+    }
+
+    async function addWish() {
+      const input = document.getElementById('wishInput')
+      const item = input.value.trim()
+      if (!item) return alert('???')
+      
+      await fetch('/api/wishes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item })
+      })
+      
+      input.value = ''
+      loadWishes()
+    }
+
+    async function fulfillWish(id) {
+      await fetch(`/api/wishes/${id}/fulfill`, { method: 'PATCH' })
+      loadWishes()
+    }
+
+    async function deleteWish(id) {
+      await fetch(`/api/wishes/${id}`, { method: 'DELETE' })
+      loadWishes()
+    }
+
+    loadWishes()
+  </script>
+</body>
+</html>
